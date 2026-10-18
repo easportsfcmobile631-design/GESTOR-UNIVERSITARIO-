@@ -1,1 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profesor Matematicas - TITANES</title>
+<style>
+body{ background:#001f3f; color:white; font-family:Arial; margin:0; padding:10px; }
+h1{ text-align:center; margin:5px; font-size:22px; }
+h2{ text-align:center; margin:0; font-size:16px; font-weight:normal; }
+.tabla-cont{ overflow:auto; border:3px solid black; background:#001f3f; margin-top:10px; }
+table{ border-collapse:collapse; width:100%; background:#001f3f; }
+th, td{ border:2px solid black; text-align:center; padding:4px; font-size:12px; }
+th{ background:#002a5c; color:white; position:sticky; top:0; }
+td:first-child{ background:#002a5c; font-weight:bold; position:sticky; left:0; }
 
+.circulo{
+ width:42px; height:42px; border-radius:50%; display:inline-flex; justify-content:center; align-items:center;
+ font-weight:bold; color:black; font-size:13px; cursor:pointer; position:relative; border:1.5px solid black; user-select:none;
+}
+.circulo sup{ position:absolute; top:-4px; right:-4px; background:black; color:white; border-radius:50%; width:16px; height:14px; font-size:9px; display:flex; justify-content:center; align-items:center; border:1px solid white; }
+.blanco{ background:white; }
+.rojo{ background:#e60000; }
+.verde{ background:#00b050; }
+.amarillo{ background:#ffcc00; }
+.naranja{ background:#ff8000; }
+
+.calif{ font-weight:bold; font-size:18px; }
+.btns{ text-align:center; margin:15px; }
+button{ background:white; color:black; border:2px solid black; padding:10px 30px; margin:0 10px; font-weight:bold; cursor:pointer; border-radius:5px; }
+button:hover{ background:#ddd; }
+</style>
+</head>
+<body>
+
+<h1>Bienvenido Profesor</h1>
+<h2>Matemáticas - 31 Turnos x 5 Colores = 155 intentos</h2>
+
+<div class="tabla-cont">
+<table id="tabla">
+<thead>
+<tr>
+<th>Alumno</th><th>U00</th><th>U01</th><th>U02</th><th>U03</th><th>U04</th><th>U05</th><th>U06</th><th>U07</th><th>U08</th><th>U09</th><th>U10</th><th>Calificación</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<div class="btns">
+<button onclick="guardar()">Guardar</button>
+<button onclick="salir()">Salir</button>
+</div>
+
+<script>
+const COLORES = [
+ {clase:'blanco', letra:'EC', valor:0, nombre:'En Curso'},
+ {clase:'rojo', letra:'NA', valor:7, nombre:'No Aprobado'},
+ {clase:'verde', letra:'AP', valor:8, nombre:'Aprobado'},
+ {clase:'amarillo', letra:'RE', valor:9, nombre:'Reforzado'},
+ {clase:'naranja', letra:'EN', valor:10, nombre:'Excelencia'}
+];
+
+const TOTAL = 31*5; //155
+let datos = JSON.parse(localStorage.getItem('titanes_v7') || '{}');
+
+function crearTabla(){
+ const tbody = document.getElementById('tbody');
+ for(let a=1;a<=100;a++){
+  let tr = document.createElement('tr');
+  tr.innerHTML = `<td>Alumno ${a}</td>`;
+  for(let u=0;u<=10;u++){
+   let key = `${a}-${u}`;
+   let idx = datos[key] !== undefined ? datos[key] : null; // null = sin calificar
+   let td = document.createElement('td');
+   td.id = `cell-${key}`;
+   td.appendChild(crearCirculoDOM(idx, key));
+   tr.appendChild(td);
+  }
+  let tdCal = document.createElement('td');
+  tdCal.id = `cal-${a}`;
+  tdCal.className = 'calif';
+  tr.appendChild(tdCal);
+  tbody.appendChild(tr);
+  actualizarCalif(a);
+ }
+}
+
+function crearCirculoDOM(totalIdx, key){
+ let div = document.createElement('div');
+ div.className = 'circulo';
+ if(totalIdx===null){
+  div.innerHTML = '***';
+  div.style.background='transparent';
+  div.style.color='white';
+  div.style.border='1px dashed white';
+  div.onclick = ()=> clickCirculo(key);
+ } else {
+  let turno = Math.floor(totalIdx/5);
+  let cIdx = totalIdx % 5;
+  let c = COLORES[cIdx];
+  div.classList.add(c.clase);
+  div.innerHTML = `${c.letra}<sup>${turno}</sup>`;
+  div.onclick = ()=> clickCirculo(key);
+ }
+ return div;
+}
+
+function clickCirculo(key){
+ let actual = datos[key];
+ if(actual===null || actual===undefined) actual = -1;
+ actual = (actual+1) % TOTAL;
+ datos[key]=actual;
+ let cell = document.getElementById(`cell-${key}`);
+ cell.innerHTML='';
+ cell.appendChild(crearCirculoDOM(actual,key));
+ let alumno = key.split('-')[0];
+ actualizarCalif(alumno);
+ autoGuardar();
+}
+
+function actualizarCalif(alumno){
+ let suma=0; let completas=0;
+ for(let u=0;u<=10;u++){
+  let key=`${alumno}-${u}`;
+  let idx=datos[key];
+  if(idx===null || idx===undefined) continue;
+  let cIdx= idx %5;
+  suma+=COLORES[cIdx].valor;
+  completas++;
+ }
+ let td=document.getElementById(`cal-${alumno}`);
+ if(completas<11){
+  td.innerHTML='***';
+  td.style.color='white';
+  td.style.background='transparent';
+ } else {
+  let prom=suma/11;
+  let dec=prom - Math.floor(prom);
+  // Tu regla: .1 .2 .3 .4 .5 = baja, .6 .7 .8 .9 = sube
+  let entero = dec >= 0.6 ? Math.ceil(prom) : Math.floor(prom);
+  td.innerHTML=entero;
+  // Pintar del color que representa
+  let colorClase='blanco';
+  if(entero===7) colorClase='rojo';
+  else if(entero===8) colorClase='verde';
+  else if(entero===9) colorClase='amarillo';
+  else if(entero>=10) colorClase='naranja';
+  else if(entero<=6 && entero>0) colorClase='rojo';
+  // aplicar color texto
+  let coloresMap={blanco:'white', rojo:'#e60000', verde:'#00b050', amarillo:'#ffcc00', naranja:'#ff8000'};
+  td.style.color = coloresMap[colorClase];
+  td.style.background = colorClase==='blanco' ? 'white' : 'transparent';
+  if(colorClase==='blanco') td.style.color='black';
+ }
+}
+
+function autoGuardar(){
+ localStorage.setItem('titanes_v7', JSON.stringify(datos));
+}
+function guardar(){
+ localStorage.setItem('titanes_v7', JSON.stringify(datos));
+ alert('Datos Guardados TITAN - No se borran');
+}
+function salir(){
+ if(confirm('¿Salir? Los datos ya están guardados')){ window.close(); }
+}
+
+// Inicio
+crearTabla();
+</script>
+</body>
+</html>
