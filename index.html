@@ -3,38 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profesor Matematicas - TITANES</title>
+<title>Matemáticas - TITAN</title>
 <style>
 body{ background:#001f3f; color:white; font-family:Arial; margin:0; padding:10px; }
-h1{ text-align:center; margin:5px; font-size:22px; }
-h2{ text-align:center; margin:0; font-size:16px; font-weight:normal; }
+h1,h2{ text-align:center; margin:5px; }
 .tabla-cont{ overflow:auto; border:3px solid black; background:#001f3f; margin-top:10px; }
 table{ border-collapse:collapse; width:100%; background:#001f3f; }
-th, td{ border:2px solid black; text-align:center; padding:4px; font-size:12px; }
-th{ background:#002a5c; color:white; position:sticky; top:0; }
-td:first-child{ background:#002a5c; font-weight:bold; position:sticky; left:0; }
+th,td{ border:2px solid black; text-align:center; padding:5px; }
+th{ background:#002a5c; color:white; position:sticky; top:0; font-size:11px; }
+td:first-child{ background:#002a5c; font-weight:bold; position:sticky; left:0; z-index:2; }
 
 .circulo{
- width:42px; height:42px; border-radius:50%; display:inline-flex; justify-content:center; align-items:center;
+ width:44px; height:44px; border-radius:50%; display:inline-flex; justify-content:center; align-items:center;
  font-weight:bold; color:black; font-size:13px; cursor:pointer; position:relative; border:1.5px solid black; user-select:none;
 }
-.circulo sup{ position:absolute; top:-4px; right:-4px; background:black; color:white; border-radius:50%; width:16px; height:14px; font-size:9px; display:flex; justify-content:center; align-items:center; border:1px solid white; }
+.circulo sup{ position:absolute; top:-5px; right:-6px; background:black; color:white; border-radius:50%; width:18px; height:15px; font-size:10px; display:flex; justify-content:center; align-items:center; border:1px solid white; }
 .blanco{ background:white; }
 .rojo{ background:#e60000; }
 .verde{ background:#00b050; }
 .amarillo{ background:#ffcc00; }
 .naranja{ background:#ff8000; }
 
-.calif{ font-weight:bold; font-size:18px; }
+.calif{ font-weight:bold; font-size:20px; min-width:60px; }
 .btns{ text-align:center; margin:15px; }
-button{ background:white; color:black; border:2px solid black; padding:10px 30px; margin:0 10px; font-weight:bold; cursor:pointer; border-radius:5px; }
-button:hover{ background:#ddd; }
+button{ background:white; color:black; border:2px solid black; padding:12px 35px; margin:0 10px; font-weight:bold; cursor:pointer; border-radius:6px; font-size:14px; }
 </style>
 </head>
 <body>
 
 <h1>Bienvenido Profesor</h1>
-<h2>Matemáticas - 31 Turnos x 5 Colores = 155 intentos</h2>
+<h2>Matemáticas</h2>
 
 <div class="tabla-cont">
 <table id="tabla">
@@ -54,120 +52,112 @@ button:hover{ background:#ddd; }
 
 <script>
 const COLORES = [
- {clase:'blanco', letra:'EC', valor:0, nombre:'En Curso'},
- {clase:'rojo', letra:'NA', valor:7, nombre:'No Aprobado'},
- {clase:'verde', letra:'AP', valor:8, nombre:'Aprobado'},
- {clase:'amarillo', letra:'RE', valor:9, nombre:'Reforzado'},
- {clase:'naranja', letra:'EN', valor:10, nombre:'Excelencia'}
+ {clase:'blanco', letra:'EC', valor:0},
+ {clase:'rojo', letra:'NA', valor:7},
+ {clase:'verde', letra:'AP', valor:8},
+ {clase:'amarillo', letra:'RE', valor:9},
+ {clase:'naranja', letra:'EN', valor:10}
 ];
-
-const TOTAL = 31*5; //155
-let datos = JSON.parse(localStorage.getItem('titanes_v7') || '{}');
+const TOTAL = 155; //31x5
+let datos = JSON.parse(localStorage.getItem('titan_final') || '{}');
 
 function crearTabla(){
- const tbody = document.getElementById('tbody');
+ const tbody=document.getElementById('tbody');
  for(let a=1;a<=100;a++){
-  let tr = document.createElement('tr');
-  tr.innerHTML = `<td>Alumno ${a}</td>`;
+  let tr=document.createElement('tr');
+  tr.innerHTML=`<td>Alumno ${a}</td>`;
   for(let u=0;u<=10;u++){
-   let key = `${a}-${u}`;
-   let idx = datos[key] !== undefined ? datos[key] : null; // null = sin calificar
-   let td = document.createElement('td');
-   td.id = `cell-${key}`;
-   td.appendChild(crearCirculoDOM(idx, key));
+   let key=`${a}-${u}`;
+   if(datos[key]===undefined) datos[key]=0; // Inicia en blanco 0
+   let td=document.createElement('td');
+   td.id=`cell-${key}`;
+   td.appendChild(crearCirculo(datos[key], key));
    tr.appendChild(td);
   }
-  let tdCal = document.createElement('td');
-  tdCal.id = `cal-${a}`;
-  tdCal.className = 'calif';
+  let tdCal=document.createElement('td');
+  tdCal.id=`cal-${a}`;
+  tdCal.className='calif';
   tr.appendChild(tdCal);
   tbody.appendChild(tr);
   actualizarCalif(a);
  }
 }
 
-function crearCirculoDOM(totalIdx, key){
- let div = document.createElement('div');
- div.className = 'circulo';
- if(totalIdx===null){
-  div.innerHTML = '***';
-  div.style.background='transparent';
-  div.style.color='white';
-  div.style.border='1px dashed white';
-  div.onclick = ()=> clickCirculo(key);
- } else {
-  let turno = Math.floor(totalIdx/5);
-  let cIdx = totalIdx % 5;
-  let c = COLORES[cIdx];
-  div.classList.add(c.clase);
-  div.innerHTML = `${c.letra}<sup>${turno}</sup>`;
-  div.onclick = ()=> clickCirculo(key);
- }
+function crearCirculo(totalIdx, key){
+ let div=document.createElement('div');
+ div.className='circulo';
+ let turno=Math.floor(totalIdx/5);
+ let cIdx=totalIdx%5;
+ let c=COLORES[cIdx];
+ div.classList.add(c.clase);
+ div.innerHTML=`${c.letra}<sup>${turno}</sup>`;
+ div.title=`${c.letra} Turno ${turno} = ${c.valor}`;
+ div.onclick=()=>clickCirculo(key);
  return div;
 }
 
 function clickCirculo(key){
- let actual = datos[key];
- if(actual===null || actual===undefined) actual = -1;
- actual = (actual+1) % TOTAL;
+ let actual=datos[key];
+ actual=(actual+1)%TOTAL;
  datos[key]=actual;
- let cell = document.getElementById(`cell-${key}`);
+ let cell=document.getElementById(`cell-${key}`);
  cell.innerHTML='';
- cell.appendChild(crearCirculoDOM(actual,key));
- let alumno = key.split('-')[0];
+ cell.appendChild(crearCirculo(actual,key));
+ let alumno=key.split('-')[0];
  actualizarCalif(alumno);
- autoGuardar();
+ localStorage.setItem('titan_final', JSON.stringify(datos));
 }
 
 function actualizarCalif(alumno){
- let suma=0; let completas=0;
+ let suma=0, hayEC=false, hayNA=false;
  for(let u=0;u<=10;u++){
   let key=`${alumno}-${u}`;
   let idx=datos[key];
-  if(idx===null || idx===undefined) continue;
-  let cIdx= idx %5;
-  suma+=COLORES[cIdx].valor;
-  completas++;
+  let cIdx=idx%5;
+  let c=COLORES[cIdx];
+  if(c.letra==='EC') hayEC=true;
+  if(c.letra==='NA') hayNA=true;
+  suma+=c.valor;
  }
  let td=document.getElementById(`cal-${alumno}`);
- if(completas<11){
-  td.innerHTML='***';
+ if(hayEC){
+  td.innerHTML='****';
   td.style.color='white';
   td.style.background='transparent';
+  return;
+ }
+ let prom=suma/11;
+ let dec=prom-Math.floor(prom);
+ let entero = dec >=0.6 ? Math.ceil(prom) : Math.floor(prom);
+ td.innerHTML=entero;
+ if(hayNA){
+  td.style.color='#e60000'; // Rojo por reprobado
+  td.style.background='white';
+  td.style.borderRadius='50%';
+  td.style.width='44px'; td.style.height='44px';
+  td.style.display='inline-flex'; td.style.justifyContent='center'; td.style.alignItems='center';
  } else {
-  let prom=suma/11;
-  let dec=prom - Math.floor(prom);
-  // Tu regla: .1 .2 .3 .4 .5 = baja, .6 .7 .8 .9 = sube
-  let entero = dec >= 0.6 ? Math.ceil(prom) : Math.floor(prom);
-  td.innerHTML=entero;
-  // Pintar del color que representa
-  let colorClase='blanco';
-  if(entero===7) colorClase='rojo';
-  else if(entero===8) colorClase='verde';
-  else if(entero===9) colorClase='amarillo';
-  else if(entero>=10) colorClase='naranja';
-  else if(entero<=6 && entero>0) colorClase='rojo';
-  // aplicar color texto
-  let coloresMap={blanco:'white', rojo:'#e60000', verde:'#00b050', amarillo:'#ffcc00', naranja:'#ff8000'};
-  td.style.color = coloresMap[colorClase];
-  td.style.background = colorClase==='blanco' ? 'white' : 'transparent';
-  if(colorClase==='blanco') td.style.color='black';
+  // Color natural
+  if(entero===7){ td.style.color='#e60000'; td.style.background='white'; }
+  else if(entero===8){ td.style.color='white'; td.style.background='#00b050'; }
+  else if(entero===9){ td.style.color='black'; td.style.background='#ffcc00'; }
+  else if(entero>=10){ td.style.color='black'; td.style.background='#ff8000'; }
+  else { td.style.color='white'; td.style.background='transparent'; }
+  td.style.borderRadius='50%';
+  td.style.width='44px'; td.style.height='44px';
+  td.style.display='inline-flex'; td.style.justifyContent='center'; td.style.alignItems='center';
  }
 }
 
-function autoGuardar(){
- localStorage.setItem('titanes_v7', JSON.stringify(datos));
-}
 function guardar(){
- localStorage.setItem('titanes_v7', JSON.stringify(datos));
- alert('Datos Guardados TITAN - No se borran');
+ localStorage.setItem('titan_final', JSON.stringify(datos));
+ alert('Guardado TITAN - Datos permanecen, no se borran');
 }
 function salir(){
- if(confirm('¿Salir? Los datos ya están guardados')){ window.close(); }
+ guardar();
+ alert('Puedes cerrar la pestaña, todo guardado');
 }
-
-// Inicio
 crearTabla();
 </script>
 </body>
-</html>
+ </html>
